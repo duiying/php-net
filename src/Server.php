@@ -30,7 +30,7 @@ class Server
             exit(0);
         }
 
-        echo sprintf('listen on %s' . PHP_EOL, $this->localSocket);
+        echo sprintf('server pid %d listen on %s' . PHP_EOL, posix_getpid(), $this->localSocket);
     }
 
     /**
