@@ -1,0 +1,26 @@
+{
+  "name": "duiying/php-net",
+  "description": "PHP 网络通信库",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "duiying",
+      "email": "wangyaxiandev@gmail.com"
+    }
+  ],
+  "require": {
+    "opis/closure": "^3.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "PHPNet\\": "src/"
+    }
+  },
+  "repositories": {
+    "packagist": {
+      "type": "composer",
+      "url": "https://mirrors.aliyun.com/composer/"
+    }
+  }
+}
