@@ -49,6 +49,7 @@ class Server
     {
         while (1) {
             // 监听 socket 只会有连接事件，所以只放入读监听数组中
+            // 因为调用 select 的时候，会修改 $readSocketList、$writeSocketList、$exceptionSocketList，所以再次调用 select 的时候，需要重新赋值 $readSocketList、$writeSocketList、$exceptionSocketList
             $readSocketList         = [$this->serverSocket];
             $writeSocketList        = [];
             $exceptionSocketList    = [];
@@ -61,13 +62,13 @@ class Server
                 }
             }
 
-            $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, null, null);
+            // 当 select 返回时，内核会修改 readfds、writefds、exceptfds 参数并通知应用程序哪些文件描述符上有事件发生了，同时返回就绪（读、写、异常）的文件描述符总数
+            // select API：https://man7.org/linux/man-pages/man2/select.2.html
+            $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, 0, 200000);
             if ($changedSocketCount === false) {
                 echo '发生错误了' . PHP_EOL;
                 break;
             }
-
-            echo '1' . PHP_EOL;
 
             // 如果有了可读 socket
             if (!empty($readSocketList)) {
@@ -80,7 +81,7 @@ class Server
                     else {
                         $data = fread($readSocket, 1024);
                         if (!empty($data)) {
-                            echo sprintf('收到了客户端发来的数据：%s' . PHP_EOL, $data);
+                            echo sprintf('收到了客户端 %d 发来的数据：%s' . PHP_EOL, (int)$readSocket, $data);
                             fwrite($readSocket, 'pong');
                         }
                     }
