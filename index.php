@@ -14,7 +14,10 @@ $server->on('receive', function (\PHPNet\Server $server, \PHPNet\TcpConnection $
     $tcpConnection->recvFromSocket();
 });
 
-// 监听
-$server->listen();
-// IO 多路复用，处理多个客户端连接
-$server->eventLoop();
+// 注册 close 回调
+$server->on('close', function (\PHPNet\Server $server, \PHPNet\TcpConnection $tcpConnection) {
+    $tcpConnection->close();
+});
+
+// 启动服务
+$server->start();

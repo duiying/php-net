@@ -27,6 +27,17 @@ class Server
     }
 
     /**
+     * 启动服务
+     */
+    public function start()
+    {
+        // 监听
+        $this->listen();
+        // IO 多路复用，处理多个客户端连接
+        $this->eventLoop();
+    }
+
+    /**
      * 监听
      */
     public function listen()

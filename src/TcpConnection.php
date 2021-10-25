@@ -8,8 +8,16 @@ class TcpConnection
     public $connectSocket;
     // 客户端连接 IP
     public $clientIp;
-    // 主服务
+    /** @var Server $server 主服务 */
     public $server;
+    // 读缓冲区大小
+    public $readBufferSize = 1024;
+    // 接收缓冲区大小（100KB）
+    public $recvBufferSize = 1024 * 100;
+    // 当前连接目前接收到的字节数大小
+    public $recvLen = 0;
+    // 当前连接接收的字节数是否超出缓冲区
+    public $recvBufferFull = 0;
 
     public function __construct($connectSocket, $clientIp, $server)
     {
@@ -36,11 +44,36 @@ class TcpConnection
      */
     public function recvFromSocket()
     {
-        $data = fread($this->connectSocket, 1024);
+        $data = fread($this->connectSocket,$this->readBufferSize);
+
+        // 如果读缓冲区有数据
         if (!empty($data)) {
             echo sprintf('有客户端发送数据了 %s' . PHP_EOL, $data);
+            $this->writeToSocket('pong');
+            return;
         }
-        $this->writeToSocket('pong');
+
+        // 如果读缓冲区无数据
+        if ($data === '' || $data === false) {
+            if (feof($this->connectSocket)) {
+                // 执行 close 回调
+                $this->server->executeEventCallback('close', [$this]);
+            }
+        }
+    }
+
+    /**
+     * 客户端关闭连接时执行
+     */
+    public function close()
+    {
+        if ($this->connectSocket !== false) {
+            fclose($this->connectSocket);
+        }
+
+        if (isset($this->server->connections[(int)$this->connectSocket])) {
+            unset($this->server->connections[(int)$this->connectSocket]);
+        }
     }
 
     /**
