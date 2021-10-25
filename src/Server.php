@@ -88,7 +88,11 @@ class Server
 
             // 将连接 socket 放入读、写监听数组中
             if (!empty($this->connections)) {
-                foreach ($this->connections as $k => $connectSocket) {
+                foreach ($this->connections as $k => $v) {
+                    /** @var TcpConnection $tcpConnection */
+                    $tcpConnection = $v;
+                    $connectSocket = $tcpConnection->getConnectSocket();
+
                     $readSocketList[]   = $connectSocket;
                     $writeSocketList[]  = $connectSocket;
                 }
