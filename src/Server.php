@@ -7,10 +7,23 @@ class Server
     public $localSocket;
     public $serverSocket;
     public $connections = [];
+    // 回调
+    public $events = [];
 
     public function __construct($localSocket)
     {
         $this->localSocket = $localSocket;
+    }
+
+    /**
+     * 增加回调
+     *
+     * @param $event
+     * @param $func
+     */
+    public function on($event, $func)
+    {
+        $this->events[$event] = $func;
     }
 
     /**
@@ -34,17 +47,36 @@ class Server
     }
 
     /**
+     * 执行回调
+     *
+     * @param $event
+     * @param array $args
+     */
+    public function executeEventCallback($event, $args = [])
+    {
+        if (isset($this->events[$event]) && is_callable($this->events[$event])) {
+            $this->events[$event]($this, ...$args);
+        }
+    }
+
+    /**
      * 处理客户端连接
      */
     public function accept()
     {
-        $connectSocket = stream_socket_accept($this->serverSocket, -1);
+        $connectSocket = stream_socket_accept($this->serverSocket, -1, $peerName);
         if ($connectSocket !== false) {
-            echo '有客户端连接了' . PHP_EOL;
-            $this->connections[(int)$connectSocket] = $connectSocket;
+            $tcpConnection = new TcpConnection($connectSocket, $peerName, $this);
+            $this->connections[(int)$connectSocket] = $tcpConnection;
+
+            // 执行 connect 回调
+            $this->executeEventCallback('connect', [$tcpConnection]);
         }
     }
 
+    /**
+     * 事件循环
+     */
     public function eventLoop()
     {
         while (1) {
@@ -79,11 +111,9 @@ class Server
                     }
                     // 如果不是监听 socket 可读，说明是客户端发来了数据
                     else {
-                        $data = fread($readSocket, 1024);
-                        if (!empty($data)) {
-                            echo sprintf('收到了客户端 %d 发来的数据：%s' . PHP_EOL, (int)$readSocket, $data);
-                            fwrite($readSocket, 'pong');
-                        }
+                        /** @var TcpConnection $tcpConnection */
+                        $tcpConnection = $this->connections[(int)$readSocket];
+                        $tcpConnection->recvFromSocket();
                     }
                 }
             }
