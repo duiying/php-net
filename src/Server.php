@@ -117,6 +117,10 @@ class Server
                 break;
             }
 
+            /**
+             * 文件描述符什么时候产生就绪事件？
+             */
+
             // 如果有了可读 socket
             if (!empty($readSocketList)) {
                 foreach ($readSocketList as $k => $readSocket) {

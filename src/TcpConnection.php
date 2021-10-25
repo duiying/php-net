@@ -63,10 +63,12 @@ class TcpConnection
     }
 
     /**
-     * 客户端关闭连接时执行
+     * 客户端断开连接时执行
      */
     public function close()
     {
+        echo sprintf('客户端 %d 断开连接了' . PHP_EOL, (int)$this->connectSocket);
+
         if ($this->connectSocket !== false) {
             fclose($this->connectSocket);
         }
