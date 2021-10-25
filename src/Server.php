@@ -117,7 +117,8 @@ class Server
                     else {
                         /** @var TcpConnection $tcpConnection */
                         $tcpConnection = $this->connections[(int)$readSocket];
-                        $tcpConnection->recvFromSocket();
+                        // 执行 receive 回调
+                        $this->executeEventCallback('receive', [$tcpConnection]);
                     }
                 }
             }

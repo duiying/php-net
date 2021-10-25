@@ -24,17 +24,23 @@ class TcpConnection
     }
 
     /**
+     * 处理连接
+     */
+    public function executeConnect()
+    {
+        echo '有客户端连接了' . PHP_EOL;
+    }
+
+    /**
      * 从客户端 socket 读取数据
      */
     public function recvFromSocket()
     {
         $data = fread($this->connectSocket, 1024);
         if (!empty($data)) {
-            /** @var Server $server */
-            $server = $this->server;
-            // 执行 receive 回调
-            $server->executeEventCallback('receive', [$data, $this]);
+            echo sprintf('有客户端发送数据了 %s' . PHP_EOL, $data);
         }
+        $this->writeToSocket('pong');
     }
 
     /**
