@@ -2,7 +2,8 @@
 
 require_once 'vendor/autoload.php';
 
-$server = new \PHPNet\Server('tcp://127.0.0.1:1234');
+// $server = new \PHPNet\Server('tcp://127.0.0.1:1234');
+$server = new \PHPNet\Server('stream://127.0.0.1:1234');
 
 // 注册 connect 回调
 $server->on('connect', function (\PHPNet\Server $server, \PHPNet\TcpConnection $tcpConnection) {

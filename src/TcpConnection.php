@@ -70,20 +70,29 @@ class TcpConnection
         }
 
         if ($this->receivedLen > 0) {
-            while ($this->server->protocol->checkLen($this->recvBuffer)) {
-                $length = $this->server->protocol->msgLen($this->recvBuffer);
+            // 如果协议不为空，那么走协议
+            if ($this->server->protocol !== null) {
+                while ($this->server->protocol->checkLen($this->recvBuffer)) {
+                    $length = $this->server->protocol->msgLen($this->recvBuffer);
 
-                // 截取一条消息
-                $msg = substr($this->recvBuffer, 0, $length);
+                    // 截取一条消息
+                    $msg = substr($this->recvBuffer, 0, $length);
 
-                $this->recvBuffer = substr($this->recvBuffer, $length);
-                $this->receivedLen -= $length;
+                    $this->recvBuffer = substr($this->recvBuffer, $length);
+                    $this->receivedLen -= $length;
 
-                $msg = $this->server->protocol->decode($msg);
+                    $msg = $this->server->protocol->decode($msg);
 
-                echo sprintf('服务端收到了客户端 %d 一条消息 %s' . PHP_EOL, (int)$this->connectSocket, $msg);
+                    echo sprintf('服务端收到了客户端 %d 一条消息 %s' . PHP_EOL, (int)$this->connectSocket, $msg);
 
-                $this->writeToSocket('world');
+                    $this->writeToSocket('world');
+                }
+            }
+            // 如果协议为空，兼容 TCP 字节流协议
+            else {
+                echo sprintf('服务端收到了客户端 %d 一条消息 %s' . PHP_EOL, (int)$this->connectSocket, $data);
+                $this->recvBuffer = '';
+                $this->receivedLen = 0;
             }
         }
     }
@@ -111,8 +120,16 @@ class TcpConnection
      */
     public function writeToSocket($data)
     {
-        $bin = $this->server->protocol->encode($data);
-        $writeLen = fwrite($this->connectSocket, $bin['packed_data'], $bin['length']);
+        // 如果协议不为空，那么走协议
+        if ($this->server->protocol !== null) {
+            $bin = $this->server->protocol->encode($data);
+            $writeLen = fwrite($this->connectSocket, $bin['packed_data'], $bin['length']);
+        }
+        // 如果协议为空，兼容 TCP 字节流协议
+        else {
+            $writeLen = fwrite($this->connectSocket, $data, strlen($data));
+        }
+
         echo sprintf('写了 %d 个字符' . PHP_EOL, $writeLen);
     }
 }

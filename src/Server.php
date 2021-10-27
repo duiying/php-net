@@ -12,11 +12,23 @@ class Server
     // 回调
     public $events = [];
     // 协议
-    public $protocol;
+    public $protocol = null;
+    // 协议对应的类
+    public $protocolClassMap = [
+        'stream'    => 'PHPNet\Protocol\Stream',
+        'text'      => '',
+        'ws'        => '',
+        'http'      => '',
+        'mqtt'      => '',
+    ];
 
     public function __construct($localSocket)
     {
-        $this->localSocket = $localSocket;
+        list($protocol, $ip, $port) = explode(':', $localSocket);
+        if (isset($this->protocolClassMap[$protocol])) {
+            $this->protocol = new $this->protocolClassMap[$protocol]();
+        }
+        $this->localSocket = sprintf('tcp:%s:%s', $ip, $port);
         $this->protocol = new Stream();
     }
 
