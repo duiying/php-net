@@ -29,7 +29,6 @@ class Server
             $this->protocol = new $this->protocolClassMap[$protocol]();
         }
         $this->localSocket = sprintf('tcp:%s:%s', $ip, $port);
-        $this->protocol = new Stream();
     }
 
     /**
