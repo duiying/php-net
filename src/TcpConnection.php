@@ -82,6 +82,8 @@ class TcpConnection
                 $msg = $this->server->protocol->decode($msg);
 
                 echo sprintf('服务端收到了客户端 %d 一条消息 %s' . PHP_EOL, (int)$this->connectSocket, $msg);
+
+                $this->writeToSocket('world');
             }
         }
     }

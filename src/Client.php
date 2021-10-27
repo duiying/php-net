@@ -83,10 +83,6 @@ class Client
             $readSocketList         = [$this->clientSocket];
             $writeSocketList        = [$this->clientSocket];
             $exceptionSocketList    = [$this->clientSocket];
-            if ($this->clientSocket === false) {
-                echo '服务端关闭了' . PHP_EOL;
-                break;
-            }
 
             $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, 0, 200000);
             if ($changedSocketCount === false) {
