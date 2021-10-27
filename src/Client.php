@@ -150,7 +150,7 @@ class Client
      */
     public function close()
     {
-        echo sprintf('服务端 %d 断开连接了' . PHP_EOL);
+        echo sprintf('服务端 %d 断开连接了' . PHP_EOL, (int)$this->clientSocket);
         fclose($this->clientSocket);
     }
 
