@@ -39,6 +39,7 @@ class TcpConnection
     public function executeConnect()
     {
         echo sprintf('客户端 %d 连接了' . PHP_EOL, (int)$this->connectSocket);
+        $this->writeToSocket('pong');
     }
 
     /**
@@ -108,8 +109,8 @@ class TcpConnection
      */
     public function writeToSocket($data)
     {
-        $len = strlen($data);
-        $writeLen = fwrite($this->connectSocket, $data, $len);
-        echo sprintf('写了 %d 个字符' . PHP_EOL, $len);
+        $bin = $this->server->protocol->encode($data);
+        $writeLen = fwrite($this->connectSocket, $bin['packed_data'], $bin['length']);
+        echo sprintf('写了 %d 个字符' . PHP_EOL, $writeLen);
     }
 }
