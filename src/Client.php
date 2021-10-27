@@ -83,6 +83,10 @@ class Client
             $readSocketList         = [$this->clientSocket];
             $writeSocketList        = [$this->clientSocket];
             $exceptionSocketList    = [$this->clientSocket];
+            if ($this->clientSocket === false) {
+                echo '服务端关闭了' . PHP_EOL;
+                break;
+            }
 
             $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, 0, 200000);
             if ($changedSocketCount === false) {
@@ -142,6 +146,8 @@ class Client
             $msg = $this->protocol->decode($msg);
 
             echo sprintf('客户端 %d 收到了一条消息 %s' . PHP_EOL, (int)$this->clientSocket, $msg);
+
+            $this->writeToSocket('hello');
         }
     }
 
