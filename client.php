@@ -24,4 +24,4 @@ $client->on('receive', function (\PHPNet\Client $client) {
     $client->receive();
 });
 
-$client->init();
+$client->start();
