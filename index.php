@@ -11,7 +11,7 @@ $server->on('connect', function (\PHPNet\Server $server, \PHPNet\TcpConnection $
 
 // 注册 receive 回调
 $server->on('receive', function (\PHPNet\Server $server, \PHPNet\TcpConnection $tcpConnection) {
-    $tcpConnection->recvFromSocket();
+    $tcpConnection->receive();
 });
 
 // 注册 close 回调

@@ -2,6 +2,8 @@
 
 namespace PHPNet;
 
+use PHPNet\Protocol\Stream;
+
 class Server
 {
     public $localSocket;
@@ -9,10 +11,13 @@ class Server
     public $connections = [];
     // 回调
     public $events = [];
+    // 协议
+    public $protocol;
 
     public function __construct($localSocket)
     {
         $this->localSocket = $localSocket;
+        $this->protocol = new Stream();
     }
 
     /**
@@ -119,6 +124,17 @@ class Server
 
             /**
              * 文件描述符什么时候产生就绪事件？
+             *
+             * 可读情况：
+             * 1、 socket 内核接收缓冲区的字节数 >= SO_RCVLOWAT 水位标记时，执行读操作时返回的字节数 > 0
+             * 2、 对端关闭时，此时的读操作返回 0
+             * 3、 监听 socket 有新客户端连接时
+             * 4、 socket 上有为处理的错误，可使用 getsockopt 来读取和清除错误
+             *
+             * 可写情况：
+             * 1、 socket 内核发送缓冲区的可用字节数 >= 低水位标记 SO_SNDLOWAT 时，执行写操作，返回的写字节数 > 0
+             * 2、 对端关闭时，写操作会触发 SIGPIPE 中断信号
+             * 3、 socket 有未处理的错误时
              */
 
             // 如果有了可读 socket
