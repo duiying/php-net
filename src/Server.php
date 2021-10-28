@@ -9,6 +9,17 @@ class Server
     public $localSocket;
     public $serverSocket;
     public $connections = [];
+
+    // 统计客户端连接数量
+    public $clientConnectCountStat = 0;
+    // 统计每秒执行 recv/fread 调用次数
+    public $receiveCountStat = 0;
+    // 统计每秒接收到的消息数
+    public $msgCountStat = 0;
+
+    // 时间
+    public $time = 0;
+
     // 回调
     public $events = [];
     // 协议
@@ -29,6 +40,7 @@ class Server
             $this->protocol = new $this->protocolClassMap[$protocol]();
         }
         $this->localSocket = sprintf('tcp:%s:%s', $ip, $port);
+        $this->time = time();
     }
 
     /**
@@ -102,6 +114,26 @@ class Server
     }
 
     /**
+     * 每秒打印一次统计信息
+     */
+    public function printStatisticsInfo()
+    {
+        $now = time();
+
+        $diffTime = $now - $this->time;
+
+        // 如果超过了 1 秒
+        if ($diffTime >= 1) {
+            echo sprintf('diffTime：%d socket：%d clientCount：%d recvCount：%d msgCount：%d' . PHP_EOL,
+            $diffTime, (int)$this->serverSocket, $this->clientConnectCountStat, $this->receiveCountStat, $this->msgCountStat);
+
+            $this->msgCountStat = 0;
+            $this->receiveCountStat = 0;
+            $this->time = $now;
+        }
+    }
+
+    /**
      * 事件循环
      */
     public function eventLoop()
@@ -112,6 +144,8 @@ class Server
             $readSocketList         = [$this->serverSocket];
             $writeSocketList        = [];
             $exceptionSocketList    = [];
+
+            $this->printStatisticsInfo();
 
             // 将连接 socket 放入读、写监听数组中
             if (!empty($this->connections)) {

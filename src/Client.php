@@ -94,6 +94,8 @@ class Client
             if (!empty($readSocketList)) {
                 $this->recvFromSocket();
             }
+
+            $this->writeToSocket('ping');
         }
     }
 
@@ -142,8 +144,6 @@ class Client
             $msg = $this->protocol->decode($msg);
 
             echo sprintf('客户端 %d 收到了一条消息 %s' . PHP_EOL, (int)$this->clientSocket, $msg);
-
-            $this->writeToSocket('hello');
         }
     }
 

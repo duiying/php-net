@@ -38,6 +38,7 @@ class TcpConnection
      */
     public function executeConnect()
     {
+        $this->server->clientConnectCountStat++;
         echo sprintf('客户端 %d 连接了' . PHP_EOL, (int)$this->connectSocket);
         $this->writeToSocket('pong');
     }
@@ -67,6 +68,8 @@ class TcpConnection
             // 把接收到的数据放在接收缓冲区中
             $this->recvBuffer .= $data;
             $this->receivedLen += strlen($data);
+
+            $this->server->receiveCountStat++;
         }
 
         if ($this->receivedLen > 0) {
@@ -83,9 +86,11 @@ class TcpConnection
 
                     $msg = $this->server->protocol->decode($msg);
 
+                    $this->server->msgCountStat++;
+
                     echo sprintf('服务端收到了客户端 %d 一条消息 %s' . PHP_EOL, (int)$this->connectSocket, $msg);
 
-                    $this->writeToSocket('world');
+                    // $this->writeToSocket('world');
                 }
             }
             // 如果协议为空，兼容 TCP 字节流协议
@@ -111,6 +116,8 @@ class TcpConnection
         if (isset($this->server->connections[(int)$this->connectSocket])) {
             unset($this->server->connections[(int)$this->connectSocket]);
         }
+
+        $this->server->clientConnectCountStat--;
     }
 
     /**
