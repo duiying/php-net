@@ -165,6 +165,6 @@ class Client
     {
         $bin = $this->protocol->encode($data);
         $writeLen = fwrite($this->clientSocket, $bin['packed_data'], $bin['length']);
-        echo sprintf('客户端 %d 写了 %d 个字符' . PHP_EOL, (int)$this->clientSocket, $writeLen);
+        // echo sprintf('客户端 %d 写了 %d 个字符' . PHP_EOL, (int)$this->clientSocket, $writeLen);
     }
 }

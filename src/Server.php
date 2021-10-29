@@ -73,7 +73,7 @@ class Server
         // TCP
         $flag = STREAM_SERVER_BIND | STREAM_SERVER_LISTEN;
 
-        $option['socket']['backlog'] = 10;
+        $option['socket']['backlog'] = 1024;
         $context = stream_context_create($option);
 
         $this->serverSocket = stream_socket_server($this->localSocket, $errorCode, $errorMsg, $flag, $context);
@@ -191,10 +191,12 @@ class Server
                     }
                     // 如果不是监听 socket 可读，说明是客户端发来了数据
                     else {
-                        /** @var TcpConnection $tcpConnection */
-                        $tcpConnection = $this->connections[(int)$readSocket];
-                        // 执行 receive 回调
-                        $this->executeEventCallback('receive', [$tcpConnection]);
+                        if (isset($this->connections[(int)$readSocket])) {
+                            /** @var TcpConnection $tcpConnection */
+                            $tcpConnection = $this->connections[(int)$readSocket];
+                            // 执行 receive 回调
+                            $this->executeEventCallback('receive', [$tcpConnection]);
+                        }
                     }
                 }
             }
