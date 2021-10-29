@@ -11,7 +11,7 @@ class TcpConnection
     /** @var Server $server 主服务 */
     public $server;
     // 读缓冲区大小（1KB）
-    public $readBufferSize = 1024;
+    public $readBufferSize = 1024 * 100;
     // 接收缓冲区大小（100KB）
     public $recvBufferSize = 1024 * 100;
     // 当前连接目前接收到的字节数大小
@@ -39,8 +39,8 @@ class TcpConnection
     public function executeConnect()
     {
         $this->server->clientConnectCountStat++;
-        echo sprintf('客户端 %d 连接了' . PHP_EOL, (int)$this->connectSocket);
-        $this->writeToSocket('pong');
+        // echo sprintf('客户端 %d 连接了' . PHP_EOL, (int)$this->connectSocket);
+        // $this->writeToSocket('pong');
     }
 
     /**
