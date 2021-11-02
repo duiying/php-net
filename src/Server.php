@@ -204,7 +204,7 @@ class Server
             if (!empty($writeSocketList)) {
                 foreach ($writeSocketList as $k => $writeSocket) {
                     /** @var TcpConnection $tcpConnection */
-                    $tcpConnection = $this->connections[(int)$readSocket];
+                    $tcpConnection = $this->connections[(int)$writeSocket];
                     $tcpConnection->writeToSocket();
                 }
             }
