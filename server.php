@@ -13,8 +13,8 @@ $server->on('connect', function (\PHPNet\Server $server, \PHPNet\TcpConnection $
 });
 
 // 注册 receive 回调
-$server->on('receive', function (\PHPNet\Server $server, \PHPNet\TcpConnection $tcpConnection) {
-    $tcpConnection->receive();
+$server->on('receive', function (\PHPNet\Server $server, \PHPNet\TcpConnection $tcpConnection, $msg) {
+    $tcpConnection->writeToBuffer(sprintf('server,time:%s', date('Y-m-d H:i:s')));
 });
 
 // 注册 close 回调

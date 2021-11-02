@@ -194,10 +194,18 @@ class Server
                         if (isset($this->connections[(int)$readSocket])) {
                             /** @var TcpConnection $tcpConnection */
                             $tcpConnection = $this->connections[(int)$readSocket];
-                            // 执行 receive 回调
-                            $this->executeEventCallback('receive', [$tcpConnection]);
+                            $tcpConnection->recvFromSocket();
                         }
                     }
+                }
+            }
+
+            // 如果有了可写 socket
+            if (!empty($writeSocketList)) {
+                foreach ($writeSocketList as $k => $writeSocket) {
+                    /** @var TcpConnection $tcpConnection */
+                    $tcpConnection = $this->connections[(int)$readSocket];
+                    $tcpConnection->writeToSocket();
                 }
             }
         }

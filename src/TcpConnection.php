@@ -10,8 +10,10 @@ class TcpConnection
     public $clientIp;
     /** @var Server $server 主服务 */
     public $server;
+
     // 读缓冲区大小（1KB）
     public $readBufferSize = 1024 * 100;
+
     // 接收缓冲区大小（100KB）
     public $recvBufferSize = 1024 * 100;
     // 当前连接目前接收到的字节数大小
@@ -20,6 +22,15 @@ class TcpConnection
     public $recvBufferFull = 0;
     // 接收缓冲区
     public $recvBuffer = '';
+
+    // 发送缓冲区大小
+    public $sendBufferSize  = 1024 * 100;
+    // 发送缓冲区
+    public $sendBuffer      = '';
+    // 已发送长度
+    public $sendLen         = 0;
+    // 发送缓冲区满次数
+    public $sendBufferFull  = 0;
 
     public function __construct($connectSocket, $clientIp, $server)
     {
@@ -39,14 +50,13 @@ class TcpConnection
     public function executeConnect()
     {
         $this->server->clientConnectCountStat++;
-        // echo sprintf('客户端 %d 连接了' . PHP_EOL, (int)$this->connectSocket);
-        // $this->writeToSocket('pong');
+        echo sprintf('客户端 %d 连接了' . PHP_EOL, (int)$this->connectSocket);
     }
 
     /**
      * 从客户端 socket 读取数据
      */
-    public function receive()
+    public function recvFromSocket()
     {
         // 如果超出了接收缓冲区大小
         if ($this->receivedLen > $this->recvBufferSize) {
@@ -73,32 +83,41 @@ class TcpConnection
         }
 
         if ($this->receivedLen > 0) {
-            // 如果协议不为空，那么走协议
-            if ($this->server->protocol !== null) {
-                while ($this->server->protocol->checkLen($this->recvBuffer)) {
-                    $length = $this->server->protocol->msgLen($this->recvBuffer);
+            $this->handleMsg();
+        }
+    }
 
-                    // 截取一条消息
-                    $msg = substr($this->recvBuffer, 0, $length);
+    /**
+     * 处理消息
+     */
+    public function handleMsg()
+    {
+        $server = $this->server;
 
-                    $this->recvBuffer = substr($this->recvBuffer, $length);
-                    $this->receivedLen -= $length;
+        // 如果协议不为空，那么走协议
+        if ($server->protocol !== null) {
+            while ($server->protocol->checkLen($this->recvBuffer)) {
+                $length = $server->protocol->msgLen($this->recvBuffer);
 
-                    $msg = $this->server->protocol->decode($msg);
+                // 截取一条消息
+                $msg = substr($this->recvBuffer, 0, $length);
 
-                    $this->server->msgCountStat++;
+                // 从接收缓冲区中删除这条消息
+                $this->recvBuffer = substr($this->recvBuffer, $length);
+                $this->receivedLen -= $length;
 
-                    // echo sprintf('服务端收到了客户端 %d 一条消息 %s' . PHP_EOL, (int)$this->connectSocket, $msg);
+                $msg = $this->server->protocol->decode($msg);
 
-                    // $this->writeToSocket('world');
-                }
+                $this->server->msgCountStat++;
+
+                $this->server->executeEventCallback('receive', [$this, $msg]);
             }
-            // 如果协议为空，兼容 TCP 字节流协议
-            else {
-                echo sprintf('服务端收到了客户端 %d 一条消息 %s' . PHP_EOL, (int)$this->connectSocket, $data);
-                $this->recvBuffer = '';
-                $this->receivedLen = 0;
-            }
+        }
+        // 如果协议为空，兼容 TCP 字节流协议
+        else {
+            $this->server->executeEventCallback('receive', [$this, $this->recvBuffer]);
+            $this->recvBuffer = '';
+            $this->receivedLen = 0;
         }
     }
 
@@ -121,22 +140,48 @@ class TcpConnection
     }
 
     /**
-     * 向客户端 socket 写数据
+     * 写入发送缓冲区
      *
      * @param $data
      */
-    public function writeToSocket($data)
+    public function writeToBuffer($data)
     {
-        // 如果协议不为空，那么走协议
-        if ($this->server->protocol !== null) {
-            $bin = $this->server->protocol->encode($data);
-            $writeLen = fwrite($this->connectSocket, $bin['packed_data'], $bin['length']);
-        }
-        // 如果协议为空，兼容 TCP 字节流协议
-        else {
-            $writeLen = fwrite($this->connectSocket, $data, strlen($data));
+        $server = $this->server;
+
+        $bin = $server->protocol->encode($data);
+        $writeData = $bin['packed_data'];
+        $len = $bin['length'];
+
+        if ($this->sendLen + $len > $this->sendBufferSize) {
+            $this->sendBufferFull++;
         }
 
-        echo sprintf('写了 %d 个字符' . PHP_EOL, $writeLen);
+        $this->sendLen += $len;
+        $this->sendBuffer .= $writeData;
+    }
+
+    /**
+     * 向客户端 socket 写数据
+     */
+    public function writeToSocket()
+    {
+        if ($this->sendLen > 0) {
+            $writeLen = fwrite($this->connectSocket, $this->sendBuffer, $this->sendLen);
+
+            // 全部写入成功
+            if ($writeLen === $this->sendLen) {
+                $this->sendBuffer = '';
+                $this->sendLen = 0;
+            }
+            // 部分写入成功
+            elseif ($writeLen > 0) {
+                $this->sendBuffer = substr($this->sendBuffer, $writeLen);
+                $this->sendLen -= $writeLen;
+            }
+            // 写入失败
+            else {
+                $this->server->executeEventCallback('close', [$this]);
+            }
+        }
     }
 }
