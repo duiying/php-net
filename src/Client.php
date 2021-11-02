@@ -28,6 +28,11 @@ class Client
     // 发送缓冲区满次数
     public $sendBufferFull = 0;
 
+    // 写入到发送缓冲区的次数统计
+    public $writeToBufferStat = 0;
+    // 写入到 socket 的次数统计
+    public $writeToSocketStat = 0;
+
     public function __construct($localSocket)
     {
         $this->localSocket = $localSocket;
@@ -195,6 +200,8 @@ class Client
             $this->handleSendBufferFull();
         }
 
+        $this->writeToBufferStat++;
+
         $this->sendLen += $len;
         $this->sendBuffer .= $writeData;
     }
@@ -206,6 +213,8 @@ class Client
     {
         if ($this->sendLen > 0) {
             $writeLen = fwrite($this->clientSocket, $this->sendBuffer, $this->sendLen);
+
+            $this->writeToSocketStat++;
 
             // 全部写入成功
             if ($writeLen === $this->sendLen) {
