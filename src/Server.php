@@ -203,9 +203,11 @@ class Server
             // 如果有了可写 socket
             if (!empty($writeSocketList)) {
                 foreach ($writeSocketList as $k => $writeSocket) {
-                    /** @var TcpConnection $tcpConnection */
-                    $tcpConnection = $this->connections[(int)$writeSocket];
-                    $tcpConnection->writeToSocket();
+                    if (isset($this->connections[(int)$writeSocket])) {
+                        /** @var TcpConnection $tcpConnection */
+                        $tcpConnection = $this->connections[(int)$writeSocket];
+                        $tcpConnection->writeToSocket();
+                    }
                 }
             }
         }
