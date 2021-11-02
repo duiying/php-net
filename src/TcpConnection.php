@@ -64,6 +64,7 @@ class TcpConnection
         }
 
         $data = fread($this->connectSocket, $this->readBufferSize);
+        $this->server->receiveCountStat++;
 
         // 如果读缓冲区无数据
         if ($data === '' || $data === false) {
@@ -78,8 +79,6 @@ class TcpConnection
             // 把接收到的数据放在接收缓冲区中
             $this->recvBuffer .= $data;
             $this->receivedLen += strlen($data);
-
-            $this->server->receiveCountStat++;
         }
 
         if ($this->receivedLen > 0) {
