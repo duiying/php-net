@@ -134,6 +134,20 @@ class Server
     }
 
     /**
+     * 检查客户端心跳
+     */
+    public function checkHeartTime()
+    {
+        foreach ($this->connections as $k => $v) {
+            /** @var TcpConnection $tcpConnection */
+            $tcpConnection = $v;
+            if (!$tcpConnection->checkHeartTime()) {
+                $tcpConnection->close();
+            }
+        }
+    }
+
+    /**
      * 事件循环
      */
     public function eventLoop()
@@ -147,12 +161,14 @@ class Server
 
             $this->printStatisticsInfo();
 
+            $this->checkHeartTime();
+
             // 将连接 socket 放入读、写监听数组中
             if (!empty($this->connections)) {
                 foreach ($this->connections as $k => $v) {
                     /** @var TcpConnection $tcpConnection */
                     $tcpConnection = $v;
-                    $connectSocket = $tcpConnection->getConnectSocket();
+                    $connectSocket = $tcpConnection->connectSocket;
 
                     $readSocketList[]   = $connectSocket;
                     $writeSocketList[]  = $connectSocket;

@@ -32,16 +32,31 @@ class TcpConnection
     // 发送缓冲区满次数
     public $sendBufferFull  = 0;
 
+    // 心跳时间
+    public $heartTime = 0;
+    const MAX_HEART_TIME = 10;
+
     public function __construct($connectSocket, $clientIp, $server)
     {
         $this->connectSocket = $connectSocket;
         $this->clientIp = $clientIp;
         $this->server = $server;
+        $this->heartTime = time();
     }
 
-    public function getConnectSocket()
+    /**
+     * 检查心跳时间
+     *
+     * @return bool
+     */
+    public function checkHeartTime()
     {
-        return $this->connectSocket;
+        $now = time();
+        if ($now - $this->heartTime > self::MAX_HEART_TIME) {
+            echo sprintf('心跳时间已经超过 %d 秒' . PHP_EOL, self::MAX_HEART_TIME);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -54,13 +69,31 @@ class TcpConnection
     }
 
     /**
+     * 接收缓冲区满了
+     */
+    public function handleRecvBufferFull()
+    {
+        $this->recvBufferFull++;
+        echo sprintf('接收缓冲区满了' . PHP_EOL);
+    }
+
+    /**
+     * 发送缓冲区满了
+     */
+    public function handleSendBufferFull()
+    {
+        $this->sendBufferFull++;
+        echo sprintf('发送缓冲区满了' . PHP_EOL);
+    }
+
+    /**
      * 从客户端 socket 读取数据
      */
     public function recvFromSocket()
     {
         // 如果超出了接收缓冲区大小
         if ($this->receivedLen > $this->recvBufferSize) {
-            $this->recvBufferFull++;
+            $this->handleRecvBufferFull();
         }
 
         $data = fread($this->connectSocket, $this->readBufferSize);
@@ -107,6 +140,8 @@ class TcpConnection
 
                 $msg = $this->server->protocol->decode($msg);
 
+                // 重置心跳时间
+                $this->heartTime = time();
                 $this->server->msgCountStat++;
 
                 $this->server->executeEventCallback('receive', [$this, $msg]);
@@ -117,6 +152,9 @@ class TcpConnection
             $this->server->executeEventCallback('receive', [$this, $this->recvBuffer]);
             $this->recvBuffer = '';
             $this->receivedLen = 0;
+            // 重置心跳时间
+            $this->heartTime = time();
+            $this->server->msgCountStat++;
         }
     }
 
@@ -152,7 +190,7 @@ class TcpConnection
         $len = $bin['length'];
 
         if ($this->sendLen + $len > $this->sendBufferSize) {
-            $this->sendBufferFull++;
+            $this->handleSendBufferFull();
         }
 
         $this->sendLen += $len;

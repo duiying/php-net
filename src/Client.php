@@ -20,13 +20,13 @@ class Client
     public $localSocket;
 
     // 发送缓冲区大小
-    public $sendBufferSize  = 1024 * 100;
+    public $sendBufferSize = 1024 * 100;
     // 发送缓冲区
-    public $sendBuffer      = '';
+    public $sendBuffer = '';
     // 已发送长度
-    public $sendLen         = 0;
+    public $sendLen = 0;
     // 发送缓冲区满次数
-    public $sendBufferFull  = 0;
+    public $sendBufferFull = 0;
 
     public function __construct($localSocket)
     {
@@ -89,28 +89,28 @@ class Client
     public function eventLoop()
     {
         //while (1) {
-            $readSocketList         = [$this->clientSocket];
-            $writeSocketList        = [$this->clientSocket];
-            $exceptionSocketList    = [$this->clientSocket];
+        $readSocketList = [$this->clientSocket];
+        $writeSocketList = [$this->clientSocket];
+        $exceptionSocketList = [$this->clientSocket];
 
-            $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, 0);
-            if ($changedSocketCount === false) {
-                echo '发生错误了' . PHP_EOL;
-                // break;
-                return false;
-            }
+        $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, 0);
+        if ($changedSocketCount === false) {
+            echo '发生错误了' . PHP_EOL;
+            // break;
+            return false;
+        }
 
-            // 如果有了可读 socket
-            if (!empty($readSocketList)) {
-                $this->recvFromSocket();
-            }
+        // 如果有了可读 socket
+        if (!empty($readSocketList)) {
+            $this->recvFromSocket();
+        }
 
-            // 如果有了可写 socket
-            if (!empty($writeSocketList)) {
-                $this->writeToSocket();
-            }
+        // 如果有了可写 socket
+        if (!empty($writeSocketList)) {
+            $this->writeToSocket();
+        }
 
-            return true;
+        return true;
         //}
     }
 
@@ -128,8 +128,7 @@ class Client
                 $this->executeEventCallback('close');
                 return;
             }
-        }
-        // 如果读缓冲区有数据
+        } // 如果读缓冲区有数据
         else {
             // 把接收到的数据放在接收缓冲区中
             $this->recvBuffer .= $data;
@@ -164,6 +163,15 @@ class Client
     }
 
     /**
+     * 发送缓冲区满了
+     */
+    public function handleSendBufferFull()
+    {
+        $this->sendBufferFull++;
+        echo sprintf('发送缓冲区满了' . PHP_EOL);
+    }
+
+    /**
      * 客户端断开连接时执行
      */
     public function close()
@@ -184,7 +192,7 @@ class Client
         $len = $bin['length'];
 
         if ($this->sendLen + $len > $this->sendBufferSize) {
-            $this->sendBufferFull++;
+            $this->handleSendBufferFull();
         }
 
         $this->sendLen += $len;
