@@ -161,7 +161,7 @@ class Server
 
             // 当 select 返回时，内核会修改 readfds、writefds、exceptfds 参数并通知应用程序哪些文件描述符上有事件发生了，同时返回就绪（读、写、异常）的文件描述符总数
             // select API：https://man7.org/linux/man-pages/man2/select.2.html
-            $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, null);
+            $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, 0);
             if ($changedSocketCount === false) {
                 echo '发生错误了' . PHP_EOL;
                 break;

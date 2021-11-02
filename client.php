@@ -29,7 +29,6 @@ for ($i = 0; $i < $clientNum; $i++) {
 
     // 注册 receive 回调
     $client->on('receive', function (Client $client, $msg) {
-        echo sprintf('客户端 %d 收到了来自服务端的数据：%s' . PHP_EOL, (int)$client->clientSocket, $msg);
     });
 
     $client->start();
