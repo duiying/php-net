@@ -41,10 +41,10 @@ class Client
     {
         $this->clientSocket = stream_socket_client($this->localSocket, $errorCode, $errorMsg);
         if ($this->clientSocket === false) {
-            $this->executeEventCallback('error', [$this, $errorCode, $errorMsg]);
+            $this->executeEventCallback('error', [$errorCode, $errorMsg]);
             exit(0);
         }
-        $this->executeEventCallback('connect', [$this]);
+        $this->executeEventCallback('connect');
         // $this->eventLoop();
     }
 
@@ -125,7 +125,7 @@ class Client
         if ($data === '' || $data === false) {
             if (feof($this->clientSocket)) {
                 // 执行 close 回调
-                $this->executeEventCallback('close', [$this]);
+                $this->executeEventCallback('close');
                 return;
             }
         }
@@ -159,7 +159,7 @@ class Client
             $msg = $this->protocol->decode($msg);
 
             // 执行 receive 回调
-            $this->executeEventCallback('receive', [$this, $msg]);
+            $this->executeEventCallback('receive', [$msg]);
         }
     }
 
@@ -211,7 +211,7 @@ class Client
             }
             // 写入失败
             else {
-                $this->executeEventCallback('close', [$this]);
+                $this->executeEventCallback('close');
             }
         }
     }
