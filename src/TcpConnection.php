@@ -185,12 +185,18 @@ class TcpConnection
     {
         $server = $this->server;
 
-        $bin = $server->protocol->encode($data);
-        $writeData = $bin['packed_data'];
-        $len = $bin['length'];
+        // 如果协议不为空，那么走协议
+        if ($server->protocol !== null) {
+            $bin = $server->protocol->encode($data);
+            $writeData = $bin['packed_data'];
+            $len = $bin['length'];
 
-        if ($this->sendLen + $len > $this->sendBufferSize) {
-            $this->handleSendBufferFull();
+            if ($this->sendLen + $len > $this->sendBufferSize) {
+                $this->handleSendBufferFull();
+            }
+        } else {
+            $len = strlen($data);
+            $writeData = $data;
         }
 
         $this->sendLen += $len;
