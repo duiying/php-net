@@ -93,7 +93,7 @@ class Client
             $writeSocketList        = [$this->clientSocket];
             $exceptionSocketList    = [$this->clientSocket];
 
-            $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, 0);
+            $changedSocketCount = stream_select($readSocketList, $writeSocketList, $exceptionSocketList, null);
             if ($changedSocketCount === false) {
                 echo '发生错误了' . PHP_EOL;
                 // break;
