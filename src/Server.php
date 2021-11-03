@@ -27,7 +27,7 @@ class Server
     // 协议对应的类
     public $protocolClassMap = [
         'stream'    => 'PHPNet\Protocol\Stream',
-        'text'      => '',
+        'text'      => 'PHPNet\Protocol\Text',
         'ws'        => '',
         'http'      => '',
         'mqtt'      => '',
