@@ -18,6 +18,7 @@ $server->on('connect', function (\PHPNet\Server $server, \PHPNet\TcpConnection $
 
 // 注册 receive 回调
 $server->on('receive', function (\PHPNet\Server $server, \PHPNet\TcpConnection $tcpConnection, $msg) {
+    echo sprintf('server received %s' . PHP_EOL, $msg);
     $tcpConnection->writeToBuffer(sprintf('server,time:%s', date('Y-m-d H:i:s')));
 });
 

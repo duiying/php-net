@@ -13,6 +13,8 @@ if (socket_connect($client, '127.0.0.1', 1234)) {
     echo "从服务端收到了数据：" . socket_read($client, 1024) . PHP_EOL;
 }
 
-sleep(5);
+sleep(8);
+socket_write($client, $data, strlen($data));
+echo "从服务端收到了数据：" . socket_read($client, 1024) . PHP_EOL;
 
 socket_close($client);
